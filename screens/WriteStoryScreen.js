@@ -7,7 +7,8 @@ import {
     TextInput,
     TouchableOpacity,
     ToastAndroid,
-    Alert
+    Alert,
+    FlatList
 } from 'react-native';
 import { Header } from 'react-native-elements';
 import db from '../config';
@@ -120,7 +121,7 @@ const styles = StyleSheet.create({
         // textAlign: 'center',
 
         borderWidth: 3,
-        outline: 'none',
+//outline: 'none',
         borderColor: "#aaaaaa"
     },
     button: {

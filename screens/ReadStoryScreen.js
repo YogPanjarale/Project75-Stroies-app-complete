@@ -1,6 +1,13 @@
 import * as React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity,ScrollView } from 'react-native';
-import { SearchBar,Header} from 'react-native-elements';
+import {
+    StyleSheet,
+    Text,
+    View,
+    TouchableOpacity,
+    ScrollView,
+    FlatList
+} from 'react-native';
+import { SearchBar, Header } from 'react-native-elements';
 
 import db from '../config';
 import firebase from 'firebase';
@@ -16,6 +23,7 @@ class ReadStoryScreen extends React.Component {
     }
     componentDidMount = () => {
         this.getStories()
+        // setInterval(this.getStories,2000)
     }
     getStories = async () => {
         var storiesRef = await db.collection('Stories').get()
@@ -30,7 +38,7 @@ class ReadStoryScreen extends React.Component {
         })
     }
     updateSearch = async () => {
-        if(this.state.search==""||this.state.search==null){
+        if (this.state.search == "" || this.state.search == null) {
             this.setState({
                 resultList: this.state.storiesList
             })
@@ -39,22 +47,23 @@ class ReadStoryScreen extends React.Component {
         console.log('updating ....')
         this.setState({
             resultList: this.state.storiesList.filter(item => {
-                
+
                 //console.log(item,item.StoryTitle)
-                if(item.StoryTitle)
-                {var result = item.StoryTitle.toLowerCase().includes(this.state.search.toLowerCase())
-                // console.log(result)
-                return result}
+                if (item.StoryTitle) {
+                    var result = item.StoryTitle.toLowerCase().includes(this.state.search.toLowerCase())
+                    // console.log(result)
+                    return result
+                }
                 return false
             })
         })
 
     }
-    
+
     render() {
         return (
             <View style={styles.container}>
-                 <Header
+                <Header
                     backgroundColor={'#39B39C'}
                     centerComponent={{
                         text: 'Read Stories',
@@ -69,35 +78,52 @@ class ReadStoryScreen extends React.Component {
                         this.updateSearch()
                     }}
                     lightTheme
-                    onClear={()=>{this.setState({resultList:this.state.storiesList});
-                    console.log('input cleared')
-                                }}
+                    onClear={() => {
+                        this.setState({ resultList: this.state.storiesList });
+                        console.log('input cleared')
+                    }}
                     value={this.state.search}
                 />
                 <Text>{this.state.search}</Text>
                 <ScrollView>
-                {
-                    this.state.resultList.map((doc, index) => {
-                        // console.log(doc)
-                        return (
-                            <TouchableOpacity key={index} style={styles.story}>
-                                <Text>
-                                    StoryTitle: {doc['StoryTitle']}
-                                </Text>
-                                <Text>
-                                    Author: {doc['Author']}
-                                </Text>
-                            </TouchableOpacity>
-
-                        )
-                    })
-                }
+                    {
+                        this.state.resultList.map((doc, index) => {
+                            // console.log(doc)
+                          //  return <BookItem key={index} doc={doc} />
+                        })
+                    }
+                    <FlatList
+                        data={this.state.resultList}
+                        renderItem={({item})=>(
+                      
+                            <BookItem doc={item}/>
+                         
+                          )}
+                
+                        keyExtractor={item => item.StoryTitle}
+                        onEndReached ={this.updateSearch}
+                        onEndReachedThreshold={0.7}
+                    />
                 </ScrollView>
             </View>
         );
     }
 }
-
+const BookItem = ({ doc }) => {
+    console.log(doc)
+    return (
+        <TouchableOpacity style={styles.story}>
+            <Text>
+                StoryTitle: {doc.StoryTitle}
+            </Text>
+            <Text>
+                Author: {doc.Author}
+            </Text>
+        </TouchableOpacity>)
+}
+const renderItem = ({ doc }) => (
+    <BookItem doc={doc} />
+);
 export default ReadStoryScreen;
 const styles = StyleSheet.create({
     container: {
@@ -107,11 +133,12 @@ const styles = StyleSheet.create({
         //   justifyContent: 'center',
     },
     story: {
-        borderBottomWidth: 2,
+        borderBottomWidth: 5,
+        borderWidth:2,
         borderColor: '#39B39C',
         // width: 250,
-        marginVertical: 10,
-        
+        marginVertical: 20,
+
 
     }
 });

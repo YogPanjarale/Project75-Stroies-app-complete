@@ -13,7 +13,7 @@ import {
 import { Header } from 'react-native-elements';
 import db from '../config';
 import firebase from 'firebase';
-
+var userIsLoggedIn
 class WriteStoryScreen extends React.Component {
     constructor() {
         super();
@@ -21,15 +21,24 @@ class WriteStoryScreen extends React.Component {
             StoryTitle: "",
             Author: "",
             story: "",
+            userIsLoggedIn:null
         }
     }
     checkStoryExists = async () => {
+        if(this.state.StoryTitle==""||this.state.Author==""){
+            if(this.state.story.length<10){
+                alert('please write bigger story')
+                return false
+            }
+            alert('StoryTitle||Author||story Cannot be Empty')
+            return false
+        }
         // Create a reference to the cities collection
         const storiesRef = db.collection('Stories');
 
         // Create a query against the collection
         const instances = await storiesRef.where('StoryTitle', '==', this.state.StoryTitle).get();
-        console.log(instances)
+        console.log(instances.docs)
         var isCopy=false
         instances.forEach((doc) => {
             console.log(doc.id, ' => ', doc.data());
@@ -44,8 +53,20 @@ class WriteStoryScreen extends React.Component {
         return isCopy;
 
     }
+    componentDidMount=()=>{
+        this.checkLoggedIn()
+    }
+    checkLoggedIn=async()=>{
+        var user =await firebase.auth().currentUser
+        var _userIsLoggedIn= user!=null
+        this.setState({
+            userIsLoggedIn:_userIsLoggedIn
+        })
+        console.table(this.state.userIsLoggedIn,_userIsLoggedIn,user)
+    }
     submitStory = async () => {
-        if (this.checkStoryExists()) {
+        console.log(this.state.userIsLoggedIn)
+        if (this.checkStoryExists()===true) {
             const res = await db.collection('Stories').add({
                 StoryTitle: this.state.StoryTitle,
                 Author: this.state.Author,
@@ -58,7 +79,7 @@ class WriteStoryScreen extends React.Component {
     }
     render() {
         return (
-            <View>
+            <View >
                 <Header
                     backgroundColor={'#39B39C'}
                     centerComponent={{
@@ -68,7 +89,7 @@ class WriteStoryScreen extends React.Component {
                 />
                 <KeyboardAvoidingView style={styles.container}>
                     <TextInput
-                        style={styles.inputBox}
+                        style={[styles.inputBox,{borderColor:this.state.StoryTitle.length<2?'#fc8585':'#aaaaaa'}]}
                         onChangeText={(text) => {
                             this.setState({ StoryTitle: text });
                         }}
@@ -76,7 +97,7 @@ class WriteStoryScreen extends React.Component {
                         placeholder="Story Title"
                     />
                     <TextInput
-                        style={styles.inputBox}
+                        style={[styles.inputBox,{borderColor:this.state.Author.length<2?'#fc8585':'#aaaaaa'}]}
                         onChangeText={(text) => {
                             this.setState({ Author: text });
                         }}
@@ -84,7 +105,9 @@ class WriteStoryScreen extends React.Component {
                         placeholder="Author"
                     />
                     <TextInput
-                        style={[styles.inputBox, { height: 200 }]}
+                        style={[styles.inputBox, { height: 200 ,
+                            borderColor:this.state.story.length<10?'#fc8585':'#aaaaaa'
+                        }]}
                         onChangeText={(text) => {
                             this.setState({ story: text });
                         }}
@@ -92,12 +115,20 @@ class WriteStoryScreen extends React.Component {
                         placeholder="Write Your Story here "
                         multiline={true}
                     />
-                    <TouchableOpacity style={styles.button}
+                    <TouchableOpacity style={[styles.button,{backgroundColor:this.state.userIsLoggedIn?'#ffca4f':'#aaaaaa'}]}
                         onPress={this.submitStory}
+                        disabled={this.state.userIsLoggedIn?false:true}
                     >
                         <Text>
                             Submit
                         </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={()=>this.props.navigation.navigate('LogInScreen')}>
+                    <Text style={{color:'#FF4B4B'}}>
+                        {this.state.userIsLoggedIn?'':'Please Log In to write Stories'}{
+                           // console.log(this.userIsLoggedIn)
+                        }
+                    </Text>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
             </View>
@@ -109,7 +140,7 @@ export default WriteStoryScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#ecf0f1',
         alignItems: 'center',
         justifyContent: 'center',
     },

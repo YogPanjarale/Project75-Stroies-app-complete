@@ -5,9 +5,9 @@ import {
     View,
     TouchableOpacity,
     ScrollView,
-    FlatList
+    FlatList, Image
 } from 'react-native';
-import { SearchBar, Header } from 'react-native-elements';
+import { SearchBar, Header,Icon } from 'react-native-elements';
 
 import db from '../config';
 import firebase from 'firebase';
@@ -18,7 +18,9 @@ class ReadStoryScreen extends React.Component {
         this.state = {
             storiesList: [],
             search: '',
-            resultList: []
+            resultList: [],
+            selectedStory: {},
+            full: false,
         }
     }
     componentDidMount = () => {
@@ -59,9 +61,39 @@ class ReadStoryScreen extends React.Component {
         })
 
     }
-
+    openStory = (item) => {
+        console.log(item)
+        this.setState({
+            selectedStory: item,
+            full: true
+        })
+    }
     render() {
         return (
+        <View >{this.state.full ?
+
+            <View style={styles.container}>
+                <Header
+                    backgroundColor={'#39B39C'}
+                    leftComponent={
+                        <TouchableOpacity style={{}}
+                            onPress={() => { this.setState({ full: false ,selectedStory:false}) }}>
+                                <Icon
+                                name="arrow-back"
+                                color="#fff"/>
+                        </TouchableOpacity>}
+                    centerComponent={{
+                        text: 'Read Stories',
+                        style: { color: '#fff', fontSize: 20 },
+                    }}
+                />
+                <ScrollView>
+                <Text style={[styles.paragraph,{fontSize:25}]}>{this.state.selectedStory.StoryTitle}</Text>
+                <Text style={[styles.paragraph,{fontSize:20,fontWeight:400,marginVertical:5}]}>{this.state.selectedStory.Author}</Text>
+                <Text style={[styles.paragraph,{fontSize:14,fontWeight:200}]}>{this.state.selectedStory.story}</Text>
+                </ScrollView>
+            </View>
+            :
             <View style={styles.container}>
                 <Header
                     backgroundColor={'#39B39C'}
@@ -89,30 +121,30 @@ class ReadStoryScreen extends React.Component {
                     {
                         this.state.resultList.map((doc, index) => {
                             // console.log(doc)
-                          //  return <BookItem key={index} doc={doc} />
+                            //  return <BookItem key={index} doc={doc} />
                         })
                     }
                     <FlatList
                         data={this.state.resultList}
-                        renderItem={({item})=>(
-                      
-                            <BookItem doc={item}/>
-                         
-                          )}
-                
+                        renderItem={({ item }) => (
+
+                            <BookItem doc={item} onPress={() => { this.openStory(item) }} />
+
+                        )}
+
                         keyExtractor={item => item.StoryTitle}
-                        onEndReached ={this.updateSearch}
+                        onEndReached={this.updateSearch}
                         onEndReachedThreshold={0.7}
                     />
                 </ScrollView>
-            </View>
+            </View>}</View>
         );
     }
 }
-const BookItem = ({ doc }) => {
-    console.log(doc)
+const BookItem = ({ doc, onPress }) => {
+    //console.log(doc)
     return (
-        <TouchableOpacity style={styles.story}>
+        <TouchableOpacity style={styles.story} onPress={onPress}>
             <Text>
                 StoryTitle: {doc.StoryTitle}
             </Text>
@@ -128,17 +160,23 @@ export default ReadStoryScreen;
 const styles = StyleSheet.create({
     container: {
         // flex: 1,
-        // backgroundColor: '#fff',
+        backgroundColor: '#ecf0f1',
         // alignItems: 'center',
         //   justifyContent: 'center',
     },
+    paragraph: {
+        margin: 10,
+        fontSize: 18,
+        fontWeight: 'bold',
+        textAlign:'left'
+    },
     story: {
         borderBottomWidth: 5,
-        borderWidth:2,
+        borderWidth: 2,
         borderColor: '#39B39C',
         // width: 250,
-        marginVertical: 20,
-
+        marginVertical: 5,
+        padding: 5,
 
     }
 });
